@@ -1,0 +1,40 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+    - master
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy_lambda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+      - name: check-env
+        run:  |
+          echo ${{ secrets.AWS_ACCESS_KEY_ID }}
+          echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          echo ${{ github.actor }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@05b148adc31e091bafbaf404f745055d4d3bc9d2
+        with:
+          role-to-assume: arn:aws:iam::377920611110:role/OIDC-Link-Lambda-Deployment
+          role-session-name: Lambda-oidc
+          aws-region: us-east-1
+      - name: npm install
+        env:
+          CI: true
+        run: |
+          npm ci
+      - name: deploy
+        run: |
+          npx ncc build index.js
+          zip -j deploy.zip ./dist/*
+          aws lambda update-function-code --function-name=lamdba-gh-action --zip-file=fileb://deploy.zip
