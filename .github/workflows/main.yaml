@@ -37,4 +37,4 @@ jobs:
         run: |
           npx ncc build index.js
           zip -j deploy.zip ./dist/*
-          aws lambda update-function-code --function-name=lamdba-gh-action --zip-file=fileb://deploy.zip
+          aws lambda update-function-code --function-name=OIDC-Link-Lambda-Deployment --zip-file=fileb://deploy.zip
